@@ -1,0 +1,13 @@
+footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 45px;
+    line-height: 45px;
+}
+
+.form-login, .form-signup {
+    max-width: 330px;
+    padding: 15px;
+    margin: 0 auto;
+}

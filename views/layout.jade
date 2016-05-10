@@ -1,0 +1,61 @@
+doctype html
+html(lang='en')
+    head
+        meta(charset='utf-8')
+        meta(http-equiv='X-UA-Compatible', content='IE=edge')
+        meta(name='viewport', content='width=device-width, initial-scale=1')
+        title= title
+        link(rel='stylesheet', href='/bootstrap-3.3.6-dist/css/bootstrap.css')
+        link(rel='stylesheet', href='/stylesheets/style.css')
+    body
+        // Static navbar
+        nav.navbar.navbar-default.navbar-static-top
+            .container
+                .navbar-header
+                    button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#navbar', aria-expanded='false', aria-controls='navbar')
+                        span.sr-only Toggle navigation
+                        span.icon-bar
+                        span.icon-bar
+                        span.icon-bar
+                    a.navbar-brand(href='/') Project name
+                #navbar.navbar-collapse.collapse
+                    ul.nav.navbar-nav
+                        li(class=(title == 'Index') ? 'active' : undefined)
+                            a(href='/') Home
+                        li(class=(title == 'About') ? 'active' : undefined)
+                            a(href='/about') About
+                        li(class=(title == 'Contact') ? 'active' : undefined)
+                            a(href='/contact') Contact
+                    ul.nav.navbar-nav.navbar-right
+                        if !user
+                            li(class=(title == 'Login') ? 'active' : undefined)
+                                a(href='/login') Login
+                            li(class=(title == 'Sign Up') ? 'active' : undefined)
+                                a(href='/signup') Sign Up
+                        else
+                            li.dropdown(class=(title == 'Account Management') ? 'active' : undefined)
+                                a.dropdown-toggle(href='#', data-toggle='dropdown')
+                                    if user.profile.picture
+                                        img(src='#{user.profile.picture}')
+                                    else
+                                        img(src='#{user.gravatar(60)}')
+                                    | #{user.profile.name || user.email || user.id}&nbsp;
+                                    i.caret
+                                ul.dropdown-menu
+                                    li
+                                        a(href='/account') My Account
+                                    li.divider
+                                    li
+                                        a(href='/logout') Logout
+                // /.nav-collapse
+        block content
+        footer
+            .container.text-center
+                p.pull-left © 2016 Company, Inc. All Rights Reserved
+                ul.pull-right.list-inline
+                    li
+                        a(href='https://github.com/rainhawk616/NodeExpressBootstrapPostgres') GitHub Project
+                    li
+                        a(href='https://github.com/rainhawk616/NodeExpressBootstrapPostgres') Issues
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js')
+    script(src='/bootstrap-3.3.6-dist/js/bootstrap.min.js')
