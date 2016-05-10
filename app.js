@@ -9,9 +9,10 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var expressValidator = require('express-validator');
+
 var session = require('express-session');
 var flash = require('connect-flash');
-var passport = require('passport');
+var FileStore = require('session-file-store')(session);
 
 /**
  * Express configuration.
@@ -23,9 +24,13 @@ app.use(cookieParser());
 app.use(bodyParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
-app.use(session({secret: 'rootroot', resave: false, saveUninitialized: false}));
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(session({
+    name: 'server-session-cookie-id',
+    secret: 'my express secret',
+    saveUninitialized: true,
+    resave: true,
+    store: new FileStore()
+}));
 app.use(flash());
 
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -45,11 +50,6 @@ var userController = require('./controllers/user.js');
  */
 externalController.registerRoutes(app);
 userController.registerRoutes(app);
-
-/**
- * API keys and Passport configuration.
- */
-var passportConfig = require('./config/passport');
 
 /**
  * Exception handlers

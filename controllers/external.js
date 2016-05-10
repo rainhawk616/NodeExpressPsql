@@ -1,6 +1,6 @@
 var models = require('../models');
-var express = require('express');
-var passport = require('passport');
+//var express = require('express');
+//var passport = require('passport');
 
 module.exports = {
     registerRoutes: function (app) {
@@ -39,26 +39,38 @@ module.exports = {
         var errors = req.validationErrors();
 
         if (errors) {
-            req.flash('errors', errors);
+            console.log("error occured: " + JSON.stringify(errors));
             return res.redirect('/login');
         }
 
-        passport.authenticate('local', function (err, user, info) {
-            if (err) {
-                return next(err);
-            }
+        req.flash('info', 'Flash is back!');
+        console.log('reg.session', req.session);
+
+        models.User.findOne({
+            where: {email: req.body.email}
+        }).then(function (user) {
             if (!user) {
-                req.flash('errors', info);
+                console.log("invalid email");
                 return res.redirect('/login');
             }
-            req.logIn(user, function (err) {
-                if (err) {
-                    return next(err);
+            else {
+                if (!user) {
+                    console.log("invalid email");
+                    res.redirect('/login');
                 }
-                req.flash('success', {msg: 'Success! You are logged in.'});
-                res.redirect(req.session.returnTo || '/');
-            });
-        })(req, res, next);
+                else {
+                    user.comparePasswords(req.body.password, function (err, isMatch) {
+                        if (isMatch) {
+                            console.log("successful login");
+                            res.redirect('/login');
+                        } else {
+                            console.log("invalid password");
+                            res.redirect('/login');
+                        }
+                    });
+                }
+            }
+        });
     },
     signup: function (req, res, next) {
         res.render('signup', {title: 'Sign Up'});
@@ -80,7 +92,7 @@ module.exports = {
             where: {email: req.body.email}
         }).then(function (user) {
             if (user) {
-                req.flash('errors', {msg: 'Account with that email address already exists.'});
+                console.log("duplicate email address")
                 return res.redirect('/signup');
             }
             else {
@@ -89,7 +101,8 @@ module.exports = {
                     password: req.body.password,
                     tos: req.body.tos
                 }).then(function () {
-                    res.redirect('/user/dashboard');
+                    console.log("registration successful");
+                    res.redirect('/login');
                 });
             }
         });
