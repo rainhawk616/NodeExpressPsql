@@ -5,13 +5,10 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
-var jsonParser = bodyParser.json();
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var expressValidator = require('express-validator');
-var externalController = require('./controllers/external.js');
-var userController = require('./controllers/user.js');
 var session = require('express-session');
 var flash = require('connect-flash');
 var passport = require('passport');
@@ -21,18 +18,30 @@ var passport = require('passport');
  */
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+
+app.use(cookieParser());
+app.use(bodyParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(session({secret: 'rootroot', resave: false, saveUninitialized: false}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
-app.use(jsonParser);
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(expressValidator());
-app.use(flash());
-app.use(session({secret: 'rootroot', resave: false, saveUninitialized: false}));
+
 
 /**
  * Controllers
+ */
+var externalController = require('./controllers/external.js');
+var userController = require('./controllers/user.js');
+
+/**
+ * Routes
  */
 externalController.registerRoutes(app);
 userController.registerRoutes(app);

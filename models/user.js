@@ -56,9 +56,9 @@ module.exports = function (sequelize, DataTypes) {
                 }
             },
             instanceMethods: {
-                comparePasswords: function (candidatePassword, callback) {
+                comparePasswords: function (candidatePassword, done) {
                     return bcrypt.compare(candidatePassword, this.password, function (err, res) {
-                        return done(err, isMatch);
+                        return done(err, res);
                     });
                 }
             }
