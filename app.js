@@ -13,8 +13,9 @@ var expressValidator = require('express-validator');
 var session = require('express-session');
 var sequelize = require('./models/index').sequelize;
 var SequelizeStore = require('connect-session-sequelize')(session.Store);
-var flash = require('connect-flash');
-
+var flash = require('express-flash');
+var passport = require('passport');
+var passportConfig = require('./config/passport');
 /**
  * Express configuration.
  */
@@ -36,11 +37,13 @@ app.use(session({
         expiration: 24 * 60 * 60 * 1000  // The maximum age (in milliseconds) of a valid session.
     })
 }));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(flash());
 
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(logger('dev'));
 app.use(expressValidator());
 
 
@@ -53,8 +56,8 @@ var userController = require('./controllers/user.js');
 /**
  * Routes
  */
-externalController.registerRoutes(app);
-userController.registerRoutes(app);
+externalController.registerRoutes(app, passportConfig);
+userController.registerRoutes(app, passportConfig);
 
 /**
  * Exception handlers

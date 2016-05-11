@@ -1,9 +1,9 @@
 var models = require('../models');
 //var express = require('express');
-//var passport = require('passport');
+var passport = require('passport');
 
 module.exports = {
-    registerRoutes: function (app) {
+    registerRoutes: function (app, passportConfig) {
         app.get('/', this.index);
         app.get('/about', this.about);
         app.get('/contact', this.contact);
@@ -39,38 +39,26 @@ module.exports = {
         var errors = req.validationErrors();
 
         if (errors) {
-            console.log("error occured: " + JSON.stringify(errors));
+            req.flash('errors', errors);
             return res.redirect('/login');
         }
 
-        req.flash('info', 'Flash is back!');
-        console.log('reg.session', req.session);
-
-        models.User.findOne({
-            where: {email: req.body.email}
-        }).then(function (user) {
+        passport.authenticate('local', function (err, user, info) {
+            if (err) {
+                return next(err);
+            }
             if (!user) {
-                console.log("invalid email");
+                req.flash('errors', info);
                 return res.redirect('/login');
             }
-            else {
-                if (!user) {
-                    console.log("invalid email");
-                    res.redirect('/login');
+            req.logIn(user, function (err) {
+                if (err) {
+                    return next(err);
                 }
-                else {
-                    user.comparePasswords(req.body.password, function (err, isMatch) {
-                        if (isMatch) {
-                            console.log("successful login");
-                            res.redirect('/login');
-                        } else {
-                            console.log("invalid password");
-                            res.redirect('/login');
-                        }
-                    });
-                }
-            }
-        });
+                req.flash('success', {msg: 'Success! You are logged in.'});
+                res.redirect(req.session.returnTo || '/');
+            });
+        })(req, res, next);
     },
     signup: function (req, res, next) {
         res.render('signup', {title: 'Sign Up'});
@@ -100,9 +88,13 @@ module.exports = {
                     email: req.body.email,
                     password: req.body.password,
                     tos: req.body.tos
-                }).then(function () {
-                    console.log("registration successful");
-                    res.redirect('/login');
+                }).then(function (user) {
+                    req.logIn(user, function (err) {
+                        if (err) {
+                            return next(err);
+                        }
+                        res.redirect('/user/dashboard');
+                    });
                 });
             }
         });

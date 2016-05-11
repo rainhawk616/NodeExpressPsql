@@ -1,8 +1,8 @@
 var models = require("../models/");
 
 module.exports = {
-    registerRoutes: function (app) {
-        app.get('/user/dashboard', this.dashboard);
+    registerRoutes: function (app, passportConfig) {
+        app.get('/user/dashboard', passportConfig.isAuthenticated, this.dashboard);
         app.post('/user/create', this.create);
         app.get('/user/:user_id/destroy', this.destroy);
         app.post('/user/:user_id/tasks/create', this.createtask);
