@@ -11,8 +11,9 @@ var logger = require('morgan');
 var expressValidator = require('express-validator');
 
 var session = require('express-session');
+var sequelize = require('./models/index').sequelize;
+var SequelizeStore = require('connect-session-sequelize')(session.Store);
 var flash = require('connect-flash');
-var FileStore = require('session-file-store')(session);
 
 /**
  * Express configuration.
@@ -26,10 +27,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(session({
     name: 'server-session-cookie-id',
-    secret: 'my express secret',
+    secret: 'rootroot',
     saveUninitialized: true,
     resave: true,
-    store: new FileStore()
+    store: new SequelizeStore({
+        db: sequelize,
+        checkExpirationInterval: 15 * 60 * 1000, // The interval at which to cleanup expired sessions in milliseconds.
+        expiration: 24 * 60 * 60 * 1000  // The maximum age (in milliseconds) of a valid session.
+    })
 }));
 app.use(flash());
 
