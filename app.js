@@ -27,10 +27,10 @@ app.use(bodyParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(session({
-    name: 'server-session-cookie-id',
+    name: 'NodeExpressPsql',
     secret: 'rootroot',
     saveUninitialized: true,
-    resave: true,
+    resave: false,
     store: new SequelizeStore({
         db: sequelize,
         checkExpirationInterval: 15 * 60 * 1000, // The interval at which to cleanup expired sessions in milliseconds.
@@ -50,6 +50,10 @@ app.use(expressValidator());
 /**
  * Controllers
  */
+app.use(function (req, res, next) {
+    res.locals.user = req.user;
+    next();
+});
 var externalController = require('./controllers/external.js');
 var userController = require('./controllers/user.js');
 

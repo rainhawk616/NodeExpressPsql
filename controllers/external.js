@@ -11,6 +11,7 @@ module.exports = {
         app.post('/login', this.postlogin);
         app.get('/signup', this.signup);
         app.post('/signup', this.postsignup);
+        app.get('/logout', this.logout);
     },
     index: function (req, res, next) {
         models.User.findAll({
@@ -40,30 +41,48 @@ module.exports = {
 
         if (errors) {
             req.flash('errors', errors);
-            return res.redirect('/login');
-        }
-
-        passport.authenticate('local', function (err, user, info) {
-            if (err) {
-                return next(err);
-            }
-            if (!user) {
-                req.flash('errors', info);
-                return res.redirect('/login');
-            }
-            req.logIn(user, function (err) {
-                if (err) {
-                    return next(err);
-                }
-                req.flash('success', {msg: 'Success! You are logged in.'});
-                res.redirect(req.session.returnTo || '/');
+            req.session.save(function () {
+                res.redirect('/login');
             });
-        })(req, res, next);
+        }
+        else {
+            passport.authenticate('local', function (err, user, info) {
+                if (err) {
+                    req.flash('errors', err);
+                    req.session.save(function () {
+                        res.redirect('/login');
+                    });
+                }
+                else if (!user) {
+                    req.flash('errors', info);
+                    req.session.save(function () {
+                        res.redirect('/login');
+                    });
+                }
+                else {
+                    req.logIn(user, function (err) {
+                        if (err) {
+                            req.flash('errors', err);
+                            req.session.save(function () {
+                                res.redirect('/login');
+                            });
+                        }
+                        else {
+                            req.flash('success', {msg: 'Success! You are logged in.'});
+                            req.session.save(function () {
+                                res.redirect('/user/dashboard');
+                            });
+                        }
+                    });
+                }
+            })(req, res, next);
+        }
     },
     signup: function (req, res, next) {
         res.render('signup', {title: 'Sign Up'});
     },
     postsignup: function (req, res, next) {
+        console.log("postsignup");
         req.check('email', 'Email is not valid').isEmail();
         req.check('password', 'Password must be at least 4 characters long').len(4);
         req.check('confirmPassword', 'Passwords do not match').equals(req.body.password);
@@ -73,30 +92,50 @@ module.exports = {
 
         if (errors) {
             req.flash('errors', errors);
-            return res.redirect('/signup');
-        }
-
-        models.User.findOne({
-            where: {email: req.body.email}
-        }).then(function (user) {
-            if (user) {
-                console.log("duplicate email address")
+            req.session.save(function () {
                 return res.redirect('/signup');
-            }
-            else {
-                models.User.create({
-                    email: req.body.email,
-                    password: req.body.password,
-                    tos: req.body.tos
-                }).then(function (user) {
-                    req.logIn(user, function (err) {
-                        if (err) {
-                            return next(err);
-                        }
-                        res.redirect('/user/dashboard');
+            });
+        }
+        else {
+            models.User.findOne({
+                where: {email: req.body.email}
+            }).then(function (user) {
+                if (user) {
+                    req.flash('errors', {msg: "This email has already been used"});
+                    req.session.save(function () {
+                        res.redirect('/signup');
+                    })
+                }
+                else {
+                    models.User.create({
+                        email: req.body.email,
+                        password: req.body.password,
+                        tos: req.body.tos
+                    }).then(function (user) {
+                        req.logIn(user, function (err) {
+                            if (err) {
+                                req.flash('errors', err);
+                                req.session.save(function () {
+                                    res.redirect('/login');
+                                });
+                            }
+                            else {
+                                req.flash('success', {msg: 'Success! You are logged in.'});
+                                req.session.save(function () {
+                                    res.redirect('/user/dashboard');
+                                });
+                            }
+                        });
                     });
-                });
-            }
+                }
+            });
+        }
+    },
+    logout: function (req, res) {
+        req.logout();
+        req.flash('success', {msg: 'logged out'});
+        req.session.save(function () {
+            res.redirect('/login');
         });
     }
 };
